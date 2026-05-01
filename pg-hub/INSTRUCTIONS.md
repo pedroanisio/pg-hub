@@ -56,13 +56,23 @@ it (or clone the hub repo into that path).
 
 ## 2. Claim a database for this project
 
+The simplest path — one idempotent command, safe to put in a `make setup`:
+
 ```sh
-pg-hub claim <name>
+pg-hub ensure <name> > .env.pg-hub        # claims if missing, starts, waits healthy
 # If you also need a test DB:
-pg-hub claim <name>-test
+pg-hub ensure <name>-test > .env.pg-hub.test
 ```
 
-Output includes the allocated port + generated env snippet. Save it.
+`ensure` writes the env snippet to stdout; status messages go to stderr.
+
+Lower-level alternative (manual claim + start):
+
+```sh
+pg-hub claim <name>                       # allocate (errors if already claimed)
+pg-hub claim <name> --if-missing          # idempotent variant
+pg-hub claim <name>-test                  # separate test DB if needed
+```
 
 Custom overrides (rarely needed):
 
@@ -81,6 +91,18 @@ pg-hub env <name> >> .env
 # with a test DB:
 pg-hub env <name>-test | sed 's/^POSTGRES_/POSTGRES_TEST_/' >> .env
 ```
+
+Other formats:
+
+```sh
+pg-hub env <name> --format json              # for tooling
+eval "$(pg-hub env <name> --format export)"  # one-shot shell export
+pg-hub env <name> --format compose-fragment  # if your app runs in docker too
+```
+
+When your app runs inside its own container and needs to reach the hub, use
+`host.docker.internal` (see the `compose-fragment` output for the exact
+snippet to paste into your project's `docker-compose.yml`).
 
 Verify the resulting `.env` contains:
 
@@ -153,6 +175,10 @@ They live in `~/infra/pg-hub/projects.yaml` (plaintext, dev-only).
 
 **Tests need isolation** — claim a dedicated `<name>-test` DB (step 2). Do
 not run tests against the main DB.
+
+**Something feels off** — run `pg-hub doctor`. It compares
+`projects.yaml`, `docker-compose.yml`, and the actual container/volume/port
+state, and reports drift with a non-zero exit. Use `--json` in CI.
 
 ---
 

@@ -1,0 +1,24 @@
+version: 1
+port_range:
+- 5433
+- 5500
+postgres_image: postgres:17-alpine
+projects:
+  registry:
+    port: 5433
+    database: registry
+    user: registry
+    password: registry
+    volume: pg-hub-registry
+  registry-test:
+    port: 5434
+    database: registry_test
+    user: registry
+    password: registry
+    volume: pg-hub-registry-test
+  screenplay:
+    port: 5435
+    database: screenplay
+    user: screenplay
+    password: screenplay_dev
+    volume: pg-hub-screenplay

@@ -1,0 +1,6 @@
+# Generated from projects.yaml — regenerable, not checked in.
+docker-compose.yml
+
+# Local overrides
+.env
+*.local.yaml
